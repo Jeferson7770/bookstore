@@ -23,9 +23,8 @@ class OrderFactory(factory.django.DjangoModelFactory):
             return
 
         if extracted:
-            for prod in extracted:
-                self.product.add(prod)
+            for product in extracted:
+                self.product.add(product)
 
     class Meta:
         model = Order
-        skip_postgeneration_save = True
