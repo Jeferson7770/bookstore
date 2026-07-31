@@ -1,6 +1,8 @@
 import json
-from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+
 from django.urls import reverse
 
 from product.factories import CategoryFactory, ProductFactory
@@ -13,6 +15,8 @@ class TestProductViewSet(APITestCase):
 
     def setUp(self):
         self.user = UserFactory()
+        token = Token.objects.create(user=self.user)
+        token.save()
         self.category = CategoryFactory()
         self.product = ProductFactory(
             title="pro controller",
@@ -21,16 +25,22 @@ class TestProductViewSet(APITestCase):
         )
 
     def test_get_all_product(self):
+        token = Token.objects.get(user__username=self.user.username)
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
         response = self.client.get(reverse("product-list", kwargs={"version": "v1"}))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         product_data = json.loads(response.content)
 
-        self.assertEqual(product_data[0]["title"], self.product.title)
-        self.assertEqual(float(product_data[0]["price"]), float(self.product.price))
-        self.assertEqual(product_data[0]["active"], self.product.active)
+        self.assertEqual(product_data["results"][0]["title"], self.product.title)
+        self.assertEqual(
+            float(product_data["results"][0]["price"]), float(self.product.price)
+        )
+        self.assertEqual(product_data["results"][0]["active"], self.product.active)
 
     def test_create_product(self):
+        token = Token.objects.get(user__username=self.user.username)
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
         data = json.dumps(
             {"title": "notebook", "price": 800.00, "categories_id": [self.category.id]}
         )
@@ -45,12 +55,14 @@ class TestProductViewSet(APITestCase):
         created_product = Product.objects.get(title="notebook")
 
         self.assertEqual(created_product.title, "notebook")
-        self.assertEqual(created_product.price, 800.00)
+        self.assertEqual(float(created_product.price), 800.00)
 
     # --- TESTES DO CRUD ---
 
     def test_get_single_product(self):
         """Testa buscar um único produto (Retrieve)"""
+        token = Token.objects.get(user__username=self.user.username)
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
         response = self.client.get(
             reverse("product-detail", kwargs={"version": "v1", "pk": self.product.id})
         )
@@ -60,6 +72,8 @@ class TestProductViewSet(APITestCase):
 
     def test_update_product(self):
         """Testa atualizar um produto (PUT)"""
+        token = Token.objects.get(user__username=self.user.username)
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
         data = {
             "title": "pro controller updated",
             "price": 250.00,
@@ -77,6 +91,8 @@ class TestProductViewSet(APITestCase):
 
     def test_delete_product(self):
         """Testa deletar um produto (Destroy)"""
+        token = Token.objects.get(user__username=self.user.username)
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
         response = self.client.delete(
             reverse("product-detail", kwargs={"version": "v1", "pk": self.product.id})
         )
