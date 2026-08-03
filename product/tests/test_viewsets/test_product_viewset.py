@@ -25,8 +25,7 @@ class TestProductViewSet(APITestCase):
         )
 
     def test_get_all_product(self):
-        token = Token.objects.get(user__username=self.user.username)
-        self.client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
+        """Testa listar produtos publicamente (sem token)"""
         response = self.client.get(reverse("product-list", kwargs={"version": "v1"}))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -39,6 +38,7 @@ class TestProductViewSet(APITestCase):
         self.assertEqual(product_data["results"][0]["active"], self.product.active)
 
     def test_create_product(self):
+        """Testa criar produto"""
         token = Token.objects.get(user__username=self.user.username)
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
         data = json.dumps(
@@ -60,9 +60,7 @@ class TestProductViewSet(APITestCase):
     # --- TESTES DO CRUD ---
 
     def test_get_single_product(self):
-        """Testa buscar um único produto (Retrieve)"""
-        token = Token.objects.get(user__username=self.user.username)
-        self.client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
+        """Testa buscar um único produto publicamente (sem token)"""
         response = self.client.get(
             reverse("product-detail", kwargs={"version": "v1", "pk": self.product.id})
         )
