@@ -23,7 +23,7 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_NO_INTERACTION=1 \
     \
     # paths
-    # this is where our requirements + virtual environment will live
+    # this is where our requirements + virtual environment will li
     PYSETUP_PATH="/opt/pysetup" \
     VENV_PATH="/opt/pysetup/.venv"
 

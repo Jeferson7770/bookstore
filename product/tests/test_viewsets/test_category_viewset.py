@@ -38,9 +38,7 @@ class CategoryViewSet(APITestCase):
 
     def test_get_single_category(self):
         """Testa buscar uma categoria específica (Retrieve / GET by ID)"""
-        response = self.client.get(
-            reverse("category-detail", kwargs={"version": "v1", "pk": self.category.id})
-        )
+        response = self.client.get(reverse("category-detail", kwargs={"version": "v1", "pk": self.category.id}))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         category_data = json.loads(response.content)
@@ -50,9 +48,7 @@ class CategoryViewSet(APITestCase):
         """Testa atualizar uma categoria (Update / PUT)"""
         data = {"title": "books updated", "slug": "books-updated"}
         response = self.client.put(
-            reverse(
-                "category-detail", kwargs={"version": "v1", "pk": self.category.id}
-            ),
+            reverse("category-detail", kwargs={"version": "v1", "pk": self.category.id}),
             data=data,
             format="json",
         )
@@ -63,9 +59,7 @@ class CategoryViewSet(APITestCase):
 
     def test_delete_category(self):
         """Testa remover uma categoria (Delete / DESTROY)"""
-        response = self.client.delete(
-            reverse("category-detail", kwargs={"version": "v1", "pk": self.category.id})
-        )
+        response = self.client.delete(reverse("category-detail", kwargs={"version": "v1", "pk": self.category.id}))
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Category.objects.filter(id=self.category.id).exists())

@@ -10,18 +10,19 @@ def test_product_serializer_fields():
     category = CategoryFactory(title="Livros")
 
     # Produto associado a categoria criada
-    product = ProductFactory(
-        title="O Senhor dos Anéis",
-        price=79.90,
-        active=True,
-        category=(category,)  
-    )
+    product = ProductFactory(title="O Senhor dos Anéis", price=79.90, active=True, category=(category,))
 
     serializer = ProductSerializer(product)
     data = serializer.data
 
-
-    assert set(data.keys()) == {"title", "description", "price", "active", "category"}
+    assert set(data.keys()) == {
+        "id",
+        "title",
+        "description",
+        "price",
+        "active",
+        "category",
+    }
 
     assert data["title"] == "O Senhor dos Anéis"
     assert float(data["price"]) == 79.90

@@ -1,26 +1,113 @@
-.PHONY: all clean lint type test test-cov
+# Set this to ~use it everywhere in the project setup
+PYTHON_VERSION ?= 3.8.10
+# the directories containing the library modules this repo builds
+LIBRARY_DIRS = bookstore order product
+# build artifacts organized in this Makefile
+BUILD_DIR ?= build
 
-CMD:=poetry run
-PYMODULE:=j5
-TESTS:=tests 
-EXTRACODE:=tests_hw
+# Comando para executar comandos dentro do Docker
+DOCKER_EXEC ?= docker-compose exec web
 
-all: type test lint
+# PyTest options
+PYTEST_HTML_OPTIONS = --html=$(BUILD_DIR)/report.html --self-contained-html
+PYTEST_TAP_OPTIONS = --tap-combined --tap-outdir $(BUILD_DIR)
+PYTEST_COVERAGE_OPTIONS = --cov=$(LIBRARY_DIRS)
+PYTEST_OPTIONS ?= $(PYTEST_HTML_OPTIONS) $(PYTEST_TAP_OPTIONS) $(PYTEST_COVERAGE_OPTIONS)
 
-lint:
-	$(CMD) flake8 $(PYMODULE) $(TESTS) $(EXTRACODE)
+# MyPy typechecking options
+MYPY_OPTS ?= --python-version $(basename $(PYTHON_VERSION)) --show-column-numbers --pretty --html-report $(BUILD_DIR)/mypy
 
-type:
-	$(CMD) mypy $(PYMODULE) $(TESTS) $(EXTRACODE)
+# Trata a checagem do pyenv no Windows para evitar o erro de process_begin
+ifeq ($(OS),Windows_NT)
+    PYENV_VERSION_DIR ?= $(HOME)/.pyenv/versions/$(PYTHON_VERSION)
+else
+    ifeq ($(shell which pyenv 2>/dev/null),)
+        PYENV_VERSION_DIR ?= $(HOME)/.pyenv/versions/$(PYTHON_VERSION)
+    else
+        PYENV_VERSION_DIR ?= $(shell pyenv root)/versions/$(PYTHON_VERSION)
+    endif
+endif
 
-test:
-	$(CMD) pytest --cov=$(PYMODULE) $(TESTS)
+PIP ?= pip3
 
-test-cov:
-	$(CMD) pytest --cov=$(PYMODULE) $(TESTS) --cov-report html
+POETRY_OPTS ?=
+POETRY ?= $(DOCKER_EXEC) poetry $(POETRY_OPTS)
+RUN_PYPKG_BIN = $(POETRY) run
 
-isort:
-	$(CMD) isort --recursive $(PYMODULE) $(TESTS) $(EXTRACODE)
+COLOR_ORANGE = \033[33m
+COLOR_RESET = \033[0m
 
-clean:
-	git clean -Xdf # Delete all files in .gitignore
+##@ Utility
+
+.PHONY: help
+help:  ## Display this help
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m\033[0m\n"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+.PHONY: version-python
+version-python: ## Echos the version of Python in use
+	@echo $(PYTHON_VERSION)
+
+##@ Testing
+
+.PHONY: test
+test: ## Runs tests
+	$(RUN_PYPKG_BIN) pytest
+
+.PHONY: test-cov
+test-cov: ## Runs tests with coverage report
+	$(RUN_PYPKG_BIN) pytest $(PYTEST_COVERAGE_OPTIONS)
+
+##@ Building and Publishing
+
+.PHONY: build
+build: ## Runs a build
+	$(POETRY) build
+
+.PHONY: publish
+publish: ## Publish a build to the configured repo
+	$(POETRY) publish $(POETRY_PUBLISH_OPTIONS_SET_BY_CI_ENV)
+
+.PHONY: deps-py-update
+deps-py-update: pyproject.toml ## Update Poetry deps, e.g. after adding a new one manually
+	$(POETRY) update
+
+##@ Setup
+
+.PHONY: deps
+deps: deps-py  ## Installs Python dependencies inside container
+
+.PHONY: deps-py
+deps-py: ## Installs Python development and runtime dependencies
+	$(POETRY) install
+
+##@ Code Quality
+
+.PHONY: check
+check: check-py ## Runs linters and other important tools
+
+.PHONY: check-py
+check-py: check-py-flake8 check-py-black ## Checks only Python files
+
+.PHONY: check-py-flake8
+check-py-flake8: ## Runs flake8 linter
+	$(RUN_PYPKG_BIN) flake8 .
+
+.PHONY: check-py-black
+check-py-black: ## Runs black in check mode (no changes)
+	$(RUN_PYPKG_BIN) black --check --line-length 118 --fast .
+
+.PHONY: check-py-mypy
+check-py-mypy: ## Runs mypy
+	$(RUN_PYPKG_BIN) mypy $(MYPY_OPTS) $(LIBRARY_DIRS)
+
+.PHONY: format-py
+format-py: ## Runs black, makes changes where necessary
+	$(RUN_PYPKG_BIN) black --line-length 118 --target-version py313 .
+
+.PHONY: format-autopep8
+format-autopep8:
+	$(RUN_PYPKG_BIN) autopep8 --in-place --recursive .
+
+.PHONY: format-isort
+format-isort:
+	$(RUN_PYPKG_BIN) isort --recursive .

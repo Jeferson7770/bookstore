@@ -32,18 +32,14 @@ class TestProductViewSet(APITestCase):
         product_data = json.loads(response.content)
 
         self.assertEqual(product_data["results"][0]["title"], self.product.title)
-        self.assertEqual(
-            float(product_data["results"][0]["price"]), float(self.product.price)
-        )
+        self.assertEqual(float(product_data["results"][0]["price"]), float(self.product.price))
         self.assertEqual(product_data["results"][0]["active"], self.product.active)
 
     def test_create_product(self):
         """Testa criar produto"""
         token = Token.objects.get(user__username=self.user.username)
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
-        data = json.dumps(
-            {"title": "notebook", "price": 800.00, "categories_id": [self.category.id]}
-        )
+        data = json.dumps({"title": "notebook", "price": 800.00, "categories_id": [self.category.id]})
 
         response = self.client.post(
             reverse("product-list", kwargs={"version": "v1"}),
@@ -61,9 +57,7 @@ class TestProductViewSet(APITestCase):
 
     def test_get_single_product(self):
         """Testa buscar um único produto publicamente (sem token)"""
-        response = self.client.get(
-            reverse("product-detail", kwargs={"version": "v1", "pk": self.product.id})
-        )
+        response = self.client.get(reverse("product-detail", kwargs={"version": "v1", "pk": self.product.id}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         product_data = json.loads(response.content)
         self.assertEqual(product_data["title"], self.product.title)
@@ -91,8 +85,6 @@ class TestProductViewSet(APITestCase):
         """Testa deletar um produto (Destroy)"""
         token = Token.objects.get(user__username=self.user.username)
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
-        response = self.client.delete(
-            reverse("product-detail", kwargs={"version": "v1", "pk": self.product.id})
-        )
+        response = self.client.delete(reverse("product-detail", kwargs={"version": "v1", "pk": self.product.id}))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Product.objects.filter(id=self.product.id).exists())

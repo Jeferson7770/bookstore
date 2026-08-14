@@ -6,7 +6,6 @@ from django.urls import reverse
 
 from product.factories import CategoryFactory, ProductFactory
 from order.factories import UserFactory, OrderFactory
-from product.models import Product
 from order.models import Order
 
 
@@ -23,9 +22,7 @@ class TestOrderViewSet(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
 
         self.category = CategoryFactory(title="technology")
-        self.product = ProductFactory(
-            title="mouse", price=100, category=[self.category]
-        )
+        self.product = ProductFactory(title="mouse", price=100, category=[self.category])
         self.order = OrderFactory(product=[self.product])
 
     def test_order(self):
@@ -34,16 +31,12 @@ class TestOrderViewSet(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         order_data = json.loads(response.content)
-        self.assertEqual(
-            order_data["results"][0]["product"][0]["title"], self.product.title
-        )
+        self.assertEqual(order_data["results"][0]["product"][0]["title"], self.product.title)
         self.assertEqual(
             float(order_data["results"][0]["product"][0]["price"]),
             float(self.product.price),
         )
-        self.assertEqual(
-            order_data["results"][0]["product"][0]["active"], self.product.active
-        )
+        self.assertEqual(order_data["results"][0]["product"][0]["active"], self.product.active)
         self.assertEqual(
             order_data["results"][0]["product"][0]["category"][0]["title"],
             self.category.title,
@@ -65,9 +58,7 @@ class TestOrderViewSet(APITestCase):
 
     def test_get_single_order(self):
         """Testa buscar um único pedido (Retrieve)"""
-        response = self.client.get(
-            reverse("order-detail", kwargs={"version": "v1", "pk": self.order.id})
-        )
+        response = self.client.get(reverse("order-detail", kwargs={"version": "v1", "pk": self.order.id}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         order_data = json.loads(response.content)
 
@@ -75,8 +66,6 @@ class TestOrderViewSet(APITestCase):
 
     def test_delete_order(self):
         """Testa deletar um pedido (Destroy)"""
-        response = self.client.delete(
-            reverse("order-detail", kwargs={"version": "v1", "pk": self.order.id})
-        )
+        response = self.client.delete(reverse("order-detail", kwargs={"version": "v1", "pk": self.order.id}))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Order.objects.filter(id=self.order.id).exists())

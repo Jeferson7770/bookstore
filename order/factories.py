@@ -1,7 +1,5 @@
 import factory
-
 from django.contrib.auth.models import User
-from product.factories import ProductFactory
 
 from order.models import Order
 
@@ -28,3 +26,4 @@ class OrderFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Order
+        skip_postgeneration_save = True

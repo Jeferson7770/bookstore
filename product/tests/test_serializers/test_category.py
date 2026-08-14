@@ -6,9 +6,7 @@ from product.serializers.product_serializer import CategorySerializer
 @pytest.mark.django_db
 def test_category_serializer():
     # Cria a categoria via factory com dados completos
-    category = CategoryFactory(
-        title="Livros", slug="livros", description="Categoria de livros", active=True
-    )
+    category = CategoryFactory(title="Livros", slug="livros", description="Categoria de livros", active=True)
 
     # Serializa a categoria
     serializer = CategorySerializer(category)

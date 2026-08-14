@@ -2,7 +2,6 @@ import pytest
 from order.factories import OrderFactory, UserFactory
 from product.factories import ProductFactory
 from order.serializers.order_serializer import OrderSerializer
-from order.models import Order
 
 
 @pytest.mark.django_db
@@ -17,7 +16,7 @@ def test_order_serializer_calculation():
     serializer = OrderSerializer(order)
     data = serializer.data
 
-    assert set(data.keys()) == {"product", "total"}
+    assert set(data.keys()) == {"product", "total", "user"}
     assert len(data["product"]) == 2
     assert data["total"] == 125.50
 
