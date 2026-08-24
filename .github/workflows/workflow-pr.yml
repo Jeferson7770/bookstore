@@ -1,24 +1,24 @@
 name: Python Pull Request Workflow
 on: [pull_request]
 jobs:
-
   qa:
     name: Quality check
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
+      
       - name: Set up Python
-        uses: actions/setup-python@master
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: "3.13"
+          
       - name: Install poetry
         run: |
-          pip install -U pip
-          pip install poetry
-          poetry install
-        env:
-          POETRY_VIRTUALENVS_CREATE: false
-
+          python -m ensurepip
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade poetry
+          
       - name: View poetry --help
         run: poetry --help
 
@@ -27,8 +27,13 @@ jobs:
         run: python -m poetry install
 
       - name: Test
+        env:
+          DJANGO_ALLOWED_HOSTS: "localhost 127.0.0.1 [::1]"
+          SECRET_KEY: "chave-secreta-de-teste"
+          DEBUG: "1"
         run: |
           poetry run python manage.py test
+          
       - name: Wemake Python Stylguide
         uses: wemake-services/wemake-python-styleguide@0.16.0
         continue-on-error: true
