@@ -8,6 +8,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.13"]
+
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +24,7 @@ jobs:
         python -m ensurepip
         python -m pip install --upgrade pip
         python -m pip install --upgrade poetry
-        
+
     - name: View poetry --help
       run: poetry --help
 
@@ -34,7 +35,7 @@ jobs:
     - name: Test
       env:
         DJANGO_ALLOWED_HOSTS: "localhost 127.0.0.1 [::1]"
-        SECRET_KEY: "chave-secreta-de-teste"
+        SECRET_KEY: "92+EgLqe8UjnCcTa+hSvOITAruWphvzfVWxNzCaK6ow="
         DEBUG: "1"
       run: |
         poetry run python manage.py test
